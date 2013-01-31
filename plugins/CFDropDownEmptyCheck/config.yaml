@@ -1,0 +1,28 @@
+id  : CFDropDownEmptyCheck
+key : cfdropdownemptycheck
+name: CFDropDownEmptyCheck
+version: 0.1
+author_name: Alfasado Inc.
+author_link: http://alfasado.net/
+description: For required Drop Down CustomField.
+callbacks:
+    pre_run: >
+            sub {
+                my $app = MT->instance;
+                return if ref( $app ) !~ /^MT::App/;
+                my $mode = $app->mode;
+                my $type = $app->param( '_type' );
+                my $blog = $app->blog;
+                if ( $blog && $type && $mode =~ /^save/ ) {
+                    my @field = CustomFields::Field->load( { blog_id => [ 0, $blog->id ],
+                                                             required => 1,
+                                                             type => 'select' } );
+                    for my $field ( @field ) {
+                        my $customfield = 'customfield_' . $field->basename;
+                        if (! $app->param( $customfield ) ) {
+                            $app->param( $customfield, undef );
+                            $app->delete_param( $customfield );
+                        }
+                    }
+                }
+            }
