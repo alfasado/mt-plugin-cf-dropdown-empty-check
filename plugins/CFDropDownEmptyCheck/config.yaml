@@ -1,7 +1,7 @@
 id  : CFDropDownEmptyCheck
 key : cfdropdownemptycheck
 name: CFDropDownEmptyCheck
-version: 0.1
+version: 0.2
 author_name: Alfasado Inc.
 author_link: http://alfasado.net/
 description: For required Drop Down CustomField.
@@ -10,11 +10,15 @@ callbacks:
             sub {
                 my $app = MT->instance;
                 return if ref( $app ) !~ /^MT::App/;
+                return if $app->param( 'reedit' );
                 my $mode = $app->mode;
                 my $type = $app->param( '_type' );
-                my $blog = $app->blog;
-                if ( $blog && $type && $mode =~ /^save/ ) {
-                    my @field = CustomFields::Field->load( { blog_id => [ 0, $blog->id ],
+                if ( $type && $mode =~ /^save/ ) {
+                    my @blog_ids = [ 0 ];
+                    my $blog = $app->blog;
+                    push ( @blog_ids, $blog->id ) if $blog;
+                    require CustomFields::Field;
+                    my @field = CustomFields::Field->load( { blog_id => \@blog_ids,
                                                              required => 1,
                                                              type => 'select' } );
                     for my $field ( @field ) {
